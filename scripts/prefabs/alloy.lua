@@ -1,85 +1,54 @@
-local imageAtlas = "images/alloy.xml"
 local assets =
 {
-  Asset("ANIM", "anim/alloy.zip"),
-  Asset("ATLAS", imageAtlas),
-  Asset("INV_IMAGE", "alloy"),
+	Asset("ANIM", "anim/alloy.zip"),
+	Asset("ATLAS", "images/alloy.xml"),
+    Asset("IMAGE", "images/alloy.tex"),
 }
 
 local function shine(inst)
-  inst.task = nil
-  if inst.onwater then
-    inst.AnimState:PlayAnimation("sparkle_water")
-    inst.AnimState:PushAnimation("idle_water")
-  else
-    inst.AnimState:PlayAnimation("sparkle")
-    inst.AnimState:PushAnimation("idle")
-  end
-  inst.task = inst:DoTaskInTime(4+math.random()*5, function() shine(inst) end)
-end
+    inst.task = nil
 
-
-local function OnWaterChange(inst, onwater)
-  inst.onwater = onwater
-end
-
-local function OnEntityWake(inst)
-  inst.components.tiletracker:Start()
-end
-
-local function OnEntitySleep(inst)
-  inst.components.tiletracker:Stop()
+	inst.AnimState:PlayAnimation("sparkle")
+	inst.AnimState:PushAnimation("idle")
+	inst.task = inst:DoTaskInTime(4+math.random()*5, function() shine(inst) end)
 end
 
 local function fn(Sim)
-  local inst = CreateEntity()
-  inst.entity:AddTransform()
-  inst.entity:AddAnimState()
-  inst.entity:AddSoundEmitter()
-  inst.entity:AddNetwork()
+	local inst = CreateEntity()
+	inst.entity:AddTransform()
+	inst.entity:AddAnimState()
+	inst.entity:AddSoundEmitter()
+	inst.entity:AddNetwork()
 
-  MakeInventoryPhysics(inst)
-  MakeInventoryFloatable(inst, "idle_water", "idle")
-  MakeBlowInHurricane(inst, TUNING.WINDBLOWN_SCALE_MIN.MEDIUM, TUNING.WINDBLOWN_SCALE_MAX.MEDIUM)
+	MakeInventoryPhysics(inst)
 
-  inst.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
+	inst.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
+	inst.AnimState:SetBank("alloy")
+	inst.AnimState:SetBuild("alloy")
+	inst.AnimState:PlayAnimation("idle")
 
-  inst.AnimState:SetBank("alloy")
-  inst.AnimState:SetBuild("alloy")
-  inst.AnimState:PlayAnimation("idle")
+	inst:AddTag("molebait")
 
-    inst:AddTag("_alloy")
     inst.entity:SetPristine()
     if not TheWorld.ismastersim then
         return inst
     end
-    inst:RemoveTag("_alloy")
 
-  inst:AddComponent("edible")
-  inst.components.edible.foodtype = "ELEMENTAL"
-  inst.components.edible.hungervalue = 2
-  inst:AddComponent("tradable")
+	inst:AddComponent("edible")
+	inst.components.edible.foodtype = "ELEMENTAL"
+	inst.components.edible.hungervalue = 2
 
-  inst:AddComponent("inspectable")
+	inst:AddComponent("inventoryitem")
+    inst.components.inventoryitem.atlasname = "images/alloy.xml"
+    inst.components.inventoryitem.imagename = "alloy"
 
-  inst:AddComponent("stackable")
-  inst:AddComponent("inventoryitem")
-  inst.components.inventoryitem.atlasname = imageAtlas
+	inst:AddComponent("bait")	
+	inst:AddComponent("inspectable")
+	inst:AddComponent("stackable")
+	inst:AddComponent("tradable")
 
-  inst:AddComponent("bait")
-  inst:AddTag("molebait")
-  inst:AddTag("scarerbait")
-
-  --[[
-  inst:AddComponent("tiletracker")
-  inst.components.tiletracker:SetOnWaterChangeFn(OnWaterChange)
-  inst.onwater = false
-  inst.OnEntityWake = OnEntityWake
-  inst.OnEntitySleep = OnEntitySleep
-  --]]
-
-  shine(inst)
-  return inst
+	shine(inst)
+	return inst
 end
 
 return Prefab("alloy", fn, assets)
